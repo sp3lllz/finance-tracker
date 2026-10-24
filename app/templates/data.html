@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Import / export · Finance Tracker{% endblock %}
+{% block content %}
+<div class="pagehead"><h1>Import / export</h1></div>
+{% if message %}<p class="notice ok" role="status">{{ message }}</p>{% endif %}
+{% if error %}<p class="notice err" role="alert">{{ error }}</p>{% endif %}
+
+<div class="columns">
+  <section class="card">
+    <h2>Export</h2>
+    <p>Download your data as CSV files. Keep a copy as a backup.</p>
+    <p><a class="button primary" href="/data/export.csv">Monthly budgets</a>
+       <a class="button" href="/data/debts.csv">Credit &amp; loans</a></p>
+  </section>
+
+  <section class="card">
+    <h2>Import</h2>
+    <p>Upload a CSV with the columns <code>year, month, kind, category, name, amount</code>.
+      <code>kind</code> is <code>income</code>, <code>bill</code> or <code>planned</code>.</p>
+    <p class="muted small">Each month that appears in the file is <strong>replaced</strong> with the file's lines.
+      Months not in the file are left alone. If any line is invalid, nothing is imported.</p>
+    <form method="post" action="/data/import" enctype="multipart/form-data" class="stack">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="file" name="file" accept=".csv,text/csv" required>
+      <button class="primary">Import</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

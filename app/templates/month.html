@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ MONTH_NAMES[month - 1] }} {{ year }} · Finance Tracker{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <h1>{{ MONTH_NAMES[month - 1] }} <a href="/year/{{ year }}" class="muted">{{ year }}</a></h1>
+  <nav class="pager">
+    <a href="{{ nav.prev }}">← Previous</a>
+    <a href="{{ nav.next }}">Next →</a>
+  </nav>
+</div>
+
+<section class="tiles">
+  <div class="tile"><span>Income</span><strong>{{ totals.income|gbp }}</strong></div>
+  <div class="tile"><span>Bills</span><strong>{{ totals.bills|gbp }}</strong></div>
+  <div class="tile"><span>Funds after bills</span>
+    <strong class="{{ 'neg' if totals.after_bills < 0 }}">{{ totals.after_bills|gbp }}</strong></div>
+  <div class="tile"><span>Planned spending</span><strong>{{ totals.planned|gbp }}</strong></div>
+  <div class="tile"><span>Funds after spending</span>
+    <strong class="{{ 'neg' if totals.after_spending < 0 }}">{{ totals.after_spending|gbp }}</strong></div>
+</section>
+
+<div class="columns">
+  <div>
+    <section class="card" id="income">
+      <h2>Income <span class="sum">{{ totals.income|gbp }}</span></h2>
+      {% for item in sections.income %}{% include "_item.html" %}{% endfor %}
+      {% with kind="income", placeholder="e.g. Overtime" %}{% include "_add.html" %}{% endwith %}
+    </section>
+
+    <section class="card" id="planned">
+      <h2>Planned spending <span class="sum">{{ totals.planned|gbp }}</span></h2>
+      <p class="muted small">One-off purchases this month. These aren't copied into next month.</p>
+      {% for item in sections.planned %}{% include "_item.html" %}{% endfor %}
+      {% with kind="planned", placeholder="e.g. New laptop" %}{% include "_add.html" %}{% endwith %}
+    </section>
+  </div>
+
+  <section class="card" id="bill">
+    <h2>Recurring outgoings <span class="sum">{{ totals.bills|gbp }}</span></h2>
+    {% for category, items in sections.bill %}
+      <div class="group">
+        <h3>{{ category or "Uncategorised" }} <span class="sum">{{ items|sum(attribute="amount_pence")|gbp }}</span></h3>
+        {% for item in items %}{% include "_item.html" %}{% endfor %}
+        {% with kind="bill", placeholder="Add to " ~ (category or "this group") %}{% include "_add.html" %}{% endwith %}
+      </div>
+    {% endfor %}
+    <form method="post" action="/month/{{ year }}/{{ month }}/items" class="row add newgroup">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="kind" value="bill">
+      <input name="category" placeholder="New category" aria-label="New category" list="cats" maxlength="60" required>
+      <input name="name" placeholder="First line" aria-label="First line name" maxlength="120" required>
+      <input name="amount" placeholder="0.00" aria-label="First line amount" inputmode="decimal" class="amount">
+      <button>Add</button>
+      <datalist id="cats">{% for c in bill_categories %}<option value="{{ c }}">{% endfor %}</datalist>
+    </form>
+  </section>
+</div>
+
+<form method="post" action="/month/{{ year }}/{{ month }}/delete" class="danger">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button class="link" data-confirm="Delete all of {{ MONTH_NAMES[month - 1] }} {{ year }}? This can't be undone.">Delete this month</button>
+</form>
+{% endblock %}

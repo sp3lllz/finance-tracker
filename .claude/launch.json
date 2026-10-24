@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "finance-dev",
+      "url": "http://localhost:8077",
+      "port": 8077
+    }
+  ]
+}

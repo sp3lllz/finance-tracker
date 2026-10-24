@@ -1,0 +1,7 @@
+<form method="post" action="/items/{{ item.id }}" class="row" id="item-{{ item.id }}">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input name="name" value="{{ item.name }}" aria-label="Name" maxlength="120" required>
+  <input name="amount" value="{{ item.amount_pence|plain }}" aria-label="Amount for {{ item.name }}" inputmode="decimal" class="amount">
+  <button name="action" value="save" class="save">Save</button>
+  <button name="action" value="delete" class="del" data-confirm="Delete “{{ item.name }}”?" aria-label="Delete {{ item.name }}">✕</button>
+</form>

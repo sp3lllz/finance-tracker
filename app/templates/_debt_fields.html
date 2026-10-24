@@ -1,0 +1,30 @@
+<div class="form-grid">
+  <label>Name
+    <input name="name" value="{{ f.name }}" maxlength="120" required placeholder="e.g. Credit card">
+  </label>
+  <label>Type
+    <select name="kind">
+      {% for key, label in DEBT_KINDS.items() %}
+        <option value="{{ key }}" {% if f.kind == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Balance owed (£)
+    <input name="balance" value="{{ f.balance }}" inputmode="decimal" required placeholder="0.00">
+  </label>
+  <label>APR (%)
+    <input name="apr" value="{{ f.apr }}" inputmode="decimal" placeholder="e.g. 24.9">
+  </label>
+  <label>Monthly payment (£)
+    <input name="payment" value="{{ f.payment }}" inputmode="decimal" required placeholder="0.00">
+  </label>
+  <label>Promo rate ends <span class="muted">(optional)</span>
+    <input type="date" name="promo_until" value="{{ f.promo_until }}">
+  </label>
+  <label>Promo APR (%) <span class="muted">(blank = 0%)</span>
+    <input name="promo_apr" value="{{ f.promo_apr }}" inputmode="decimal" placeholder="0">
+  </label>
+  <label class="wide">Notes
+    <input name="notes" value="{{ f.notes }}" maxlength="500">
+  </label>
+</div>

@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Your data and secrets never go in git
+data/
+.env
+*.db
+*.csv
+!tests/fixtures/*.csv
+data-dev/
+.claude/settings.local.json

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ MONTH_NAMES[month - 1] }} {{ year }} · Finance Tracker{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <h1>{{ MONTH_NAMES[month - 1] }} <a href="/year/{{ year }}" class="muted">{{ year }}</a></h1>
+  <nav class="pager">
+    <a href="{{ nav.prev }}">← Previous</a>
+    <a href="{{ nav.next }}">Next →</a>
+  </nav>
+</div>
+<section class="card start">
+  <h2>This month hasn't been started</h2>
+  {% if source %}
+  <form method="post" action="/month/{{ year }}/{{ month }}/start">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="mode" value="copy">
+    <button class="primary">Copy from {{ MONTH_NAMES[source[1] - 1] }} {{ source[0] }}</button>
+    <p class="muted small">Brings over income and recurring outgoings with their amounts. Planned spending starts empty.</p>
+  </form>
+  {% endif %}
+  <form method="post" action="/month/{{ year }}/{{ month }}/start">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="mode" value="blank">
+    <button class="{{ 'primary' if not source }}">Start from the blank template</button>
+    <p class="muted small">The standard categories (utilities, housing, finance, other bills) with £0 amounts.</p>
+  </form>
+</section>
+{% endblock %}

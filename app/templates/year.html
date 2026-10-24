@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ year }} · Finance Tracker{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <h1>{{ year }}</h1>
+  <nav class="pager">
+    {% for y in years %}
+      <a href="/year/{{ y }}" {% if y == year %}aria-current="page"{% endif %}>{{ y }}</a>
+    {% endfor %}
+  </nav>
+</div>
+
+<section class="tiles">
+  <div class="tile"><span>Income</span><strong>{{ overall.income|gbp }}</strong></div>
+  <div class="tile"><span>Bills</span><strong>{{ overall.bills|gbp }}</strong></div>
+  <div class="tile"><span>Planned spending</span><strong>{{ overall.planned|gbp }}</strong></div>
+  <div class="tile"><span>Left over</span>
+    <strong class="{{ 'neg' if overall.after_spending < 0 }}">{{ overall.after_spending|gbp }}</strong></div>
+</section>
+
+<section class="card">
+  <h2>Income vs outgoings</h2>
+  {% if chart.empty %}
+    <p class="muted">No months recorded for {{ year }} yet. Open a month below to start one.</p>
+  {% else %}
+  <ul class="legend">
+    <li><i class="swatch series-1"></i>Income</li>
+    <li><i class="swatch series-2"></i>Outgoings (bills + planned)</li>
+  </ul>
+  <div class="chart-wrap">
+    <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img"
+         aria-label="Monthly income and outgoings for {{ year }}; the table below has the figures">
+      {% for t in chart.ticks %}
+        <line class="grid" x1="{{ chart.left }}" x2="{{ chart.right_edge }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+        <text class="axis" x="{{ chart.left - 8 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>
+      {% endfor %}
+      {% for g in chart.groups %}
+        {% for b in g.bars %}<path class="{{ b.css }}" d="{{ b.path }}"></path>{% endfor %}
+        <text class="axis" x="{{ g.x + g.width / 2 }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ g.label }}</text>
+        <a href="/month/{{ year }}/{{ loop.index }}">
+          <rect class="hit" x="{{ g.x }}" y="0" width="{{ g.width }}" height="{{ chart.baseline }}" data-tip="{{ g.tip }}"></rect>
+        </a>
+      {% endfor %}
+    </svg>
+    <div class="tooltip" hidden></div>
+  </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Months</h2>
+  <div class="table-scroll">
+  <table class="figures">
+    <thead><tr><th>Month</th><th>Income</th><th>Bills</th><th>After bills</th><th>Planned</th><th>Left over</th></tr></thead>
+    <tbody>
+    {% for m in range(1, 13) %}
+      {% set t = totals.get(m) %}
+      <tr>
+        <th><a href="/month/{{ year }}/{{ m }}">{{ MONTH_NAMES[m - 1] }}</a></th>
+        {% if t %}
+          <td>{{ t.income|gbp }}</td><td>{{ t.bills|gbp }}</td>
+          <td class="{{ 'neg' if t.after_bills < 0 }}">{{ t.after_bills|gbp }}</td>
+          <td>{{ t.planned|gbp }}</td>
+          <td class="{{ 'neg' if t.after_spending < 0 }}">{{ t.after_spending|gbp }}</td>
+        {% else %}
+          <td colspan="5" class="muted">Not started</td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot><tr><th>Total</th><td>{{ overall.income|gbp }}</td><td>{{ overall.bills|gbp }}</td>
+      <td>{{ overall.after_bills|gbp }}</td><td>{{ overall.planned|gbp }}</td>
+      <td class="{{ 'neg' if overall.after_spending < 0 }}">{{ overall.after_spending|gbp }}</td></tr></tfoot>
+  </table>
+  </div>
+</section>
+{% endblock %}

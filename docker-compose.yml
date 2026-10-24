@@ -1,0 +1,15 @@
+services:
+  finance:
+    build: .
+    image: finance-tracker:latest
+    container_name: finance-tracker
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # Named volume: owned by the app's non-root user automatically.
+      - finance-data:/data
+
+volumes:
+  finance-data:

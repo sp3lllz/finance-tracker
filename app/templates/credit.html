@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Credit · Finance Tracker{% endblock %}
+{% block content %}
+<div class="pagehead"><h1>Credit &amp; loans</h1></div>
+{% if error %}<p class="notice err" role="alert">{{ error }}</p>{% endif %}
+
+{% if debts %}
+<section class="tiles">
+  <div class="tile"><span>Total owed</span><strong>{{ total|gbp }}</strong></div>
+  <div class="tile"><span>Monthly payments</span><strong>{{ payments|gbp }}</strong></div>
+  <div class="tile"><span>Debt-free at current payments</span>
+    <strong class="{{ 'neg' if current.months is none }}">
+      {% if current.months is none %}Never{% elif current.months == 0 %}Now{% else %}{{ current.month_date(current.months).strftime("%b %Y") }}{% endif %}
+    </strong></div>
+  <div class="tile"><span>Interest still to pay</span>
+    <strong>{{ current.interest_pence|gbp }}{% if current.months is none %}+{% endif %}</strong></div>
+</section>
+
+<section class="card">
+  <h2>Your debts</h2>
+  <div class="table-scroll">
+  <table class="figures">
+    <thead><tr><th>Name</th><th>Balance</th><th>APR</th><th>Payment</th><th>Paid off</th><th>Interest to pay</th></tr></thead>
+    <tbody>
+    {% for r in current.results %}{% set d = r.debt %}
+      <tr>
+        <th class="left"><a href="/credit/{{ d.id }}">{{ d.name }}</a> <span class="badge">{{ DEBT_KINDS.get(d.kind, "Other") }}</span>
+          {% if d.updated_on %}<div class="muted small">balance from {{ d.updated_on.strftime("%-d %b %Y") }}</div>{% endif %}</th>
+        <td>{{ d.balance_pence|gbp }}</td>
+        <td>{{ d.apr_bp|rate }}%{% if d.promo_until and d.promo_until > current.start %}
+          <div class="muted small">{{ d.promo_apr_bp|rate }}% until {{ d.promo_until.strftime("%b %Y") }}</div>{% endif %}</td>
+        <td>{{ d.payment_pence|gbp }}</td>
+        {% if r.cleared %}
+          <td>{% if r.months %}{{ current.month_date(r.months).strftime("%b %Y") }}<div class="muted small">{{ r.months|duration }}</div>{% else %}Paid{% endif %}</td>
+          <td>{{ r.interest_pence|gbp }}</td>
+        {% else %}
+          <td colspan="2" class="warn left">Payment doesn't cover the interest.
+            <div class="small">Pay at least {{ stuck[d.id]|gbp }}/month to clear it.</div></td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="muted small">Estimates. Interest is added monthly at the APR, then your payment is taken. Your lender's figures will differ slightly.</p>
+</section>
+
+<section class="card">
+  <h2>Debt-free plan</h2>
+  <form method="get" action="/credit" class="plan-form">
+    <label>Extra each month (£)
+      <input name="extra" value="{{ (extra|plain) if extra else '' }}" inputmode="decimal" placeholder="0.00">
+    </label>
+    <label>Put spare money towards
+      <select name="strategy">
+        {% for key, label in STRATEGIES.items() %}
+          <option value="{{ key }}" {% if key == strategy %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="primary">Work it out</button>
+  </form>
+  <p class="small">When a debt is cleared, its payment rolls on to the next one{% if extra %}, along with your extra {{ extra|gbp }} a month{% endif %}.</p>
+
+  <section class="tiles">
+    <div class="tile"><span>Debt-free with the plan</span><strong>
+      {% if plan.months is none %}Never{% elif plan.months == 0 %}Now{% else %}{{ plan.month_date(plan.months).strftime("%b %Y") }}{% endif %}</strong></div>
+    <div class="tile"><span>Interest with the plan</span><strong>{{ plan.interest_pence|gbp }}</strong></div>
+    {% if current.months is not none and plan.months is not none %}
+    <div class="tile"><span>Interest saved</span><strong>{{ (current.interest_pence - plan.interest_pence)|gbp }}</strong></div>
+    <div class="tile"><span>Time saved</span><strong>{{ (current.months - plan.months)|duration }}</strong></div>
+    {% endif %}
+  </section>
+
+  {% if chart %}
+  <ul class="legend">
+    <li><i class="swatch series-1"></i>Current payments</li>
+    <li><i class="swatch series-2"></i>Plan</li>
+  </ul>
+  <div class="chart-wrap">
+    <svg class="chart" viewBox="0 0 {{ chart.width }} {{ chart.height }}" role="img"
+         aria-label="Total owed over time, current payments compared with the plan">
+      {% for t in chart.ticks %}
+        <line class="grid" x1="{{ chart.left }}" x2="{{ chart.right_edge }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+        <text class="axis" x="{{ chart.left - 8 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>
+      {% endfor %}
+      {% for x, label in chart.x_labels %}
+        <text class="axis" x="{{ x }}" y="{{ chart.height - 8 }}" text-anchor="middle">{{ label }}</text>
+      {% endfor %}
+      {% for l in chart.lines %}
+        <path class="line {{ l.css }}" d="{{ l.path }}"></path>
+        <text class="endlabel" x="{{ l.end_x + 6 }}" y="{{ l.end_y + 4 }}">{{ l.label }}</text>
+      {% endfor %}
+      {% for h in chart.hits %}
+        <rect class="hit" x="{{ h.x }}" y="0" width="{{ h.width }}" height="{{ chart.baseline }}" data-tip="{{ h.tip }}"></rect>
+      {% endfor %}
+    </svg>
+    <div class="tooltip" hidden></div>
+  </div>
+  {% endif %}
+
+  {% if payoff_order %}
+  <h3>Order debts are cleared</h3>
+  <ol class="order">
+    {% for r in payoff_order %}
+      <li>{{ r.debt.name }}: {{ plan.month_date(r.months).strftime("%b %Y") }} <span class="muted">({{ r.interest_pence|gbp }} interest)</span></li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>Add a debt</h2>
+  {% if not debts %}<p class="muted">Add credit cards, loans, a mortgage or anything else you're paying off to see when each will be cleared and how much interest it will cost.</p>{% endif %}
+  <form method="post" action="/credit" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% with f = draft %}{% include "_debt_fields.html" %}{% endwith %}
+    <button class="primary">Add</button>
+  </form>
+</section>
+{% endblock %}

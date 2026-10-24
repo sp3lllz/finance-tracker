@@ -1,0 +1,8 @@
+<form method="post" action="/month/{{ year }}/{{ month }}/items" class="row add">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="kind" value="{{ kind }}">
+  {% if category is defined %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+  <input name="name" placeholder="{{ placeholder }}" aria-label="New line name" maxlength="120" required>
+  <input name="amount" placeholder="0.00" aria-label="New line amount" inputmode="decimal" class="amount">
+  <button>Add</button>
+</form>

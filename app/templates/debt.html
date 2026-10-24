@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ debt.name }} · Finance Tracker{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <h1>{{ debt.name }}</h1>
+  <nav class="pager"><a href="/credit">← All debts</a></nav>
+</div>
+{% if error %}<p class="notice err" role="alert">{{ error }}</p>{% endif %}
+<section class="card">
+  <p class="muted small">Update the balance from your latest statement to keep the projection accurate.</p>
+  <form method="post" action="/credit/{{ debt.id }}" class="stack">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% set f = {
+      "name": debt.name, "kind": debt.kind, "balance": debt.balance_pence|plain,
+      "apr": debt.apr_bp|rate, "payment": debt.payment_pence|plain,
+      "promo_until": debt.promo_until.isoformat() if debt.promo_until else "",
+      "promo_apr": debt.promo_apr_bp|rate if debt.promo_until else "", "notes": debt.notes,
+    } %}
+    {% include "_debt_fields.html" %}
+    <div>
+      <button name="action" value="save" class="primary">Save</button>
+      <button name="action" value="delete" data-confirm="Delete {{ debt.name }}?">Delete</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
