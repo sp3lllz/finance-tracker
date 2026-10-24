@@ -106,3 +106,7 @@ AUTH_DISABLED=true DATA_DIR=./data-dev SESSION_SECRET=$(python3 -c "import secre
 
 Stack: Python 3.12, Starlette, Jinja2, Authlib, SQLite. No JavaScript build step. The
 chart and tooltip scripts are small and served from `app/static`.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
